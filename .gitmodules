@@ -1,0 +1,3 @@
+[submodule "Plugins/SocialSharePlugin"]
+	path = Plugins/SocialShare
+	url = https://github.com/fantom-world/fantom-social-share-plugin.git
