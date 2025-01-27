@@ -2,7 +2,7 @@
 
 
 #include "MainWidgetBase.h"
-#include "SocialShareBPLibrary.h"
+#include "SocialShareData.h"
 
 void UMainWidgetBase::NativeConstruct()
 {
@@ -36,42 +36,87 @@ void UMainWidgetBase::Share()
 
 void UMainWidgetBase::ShareImage()
 {
-    //SNS共有時に選択したアプリ名を通知するイベントをBindする
-    OnReceiveShareSelectedAppDelegateHandle = USocialShareBPLibrary::OnReceiveShareSelectedAppDelegate.AddUObject(this, &UMainWidgetBase::PrintShareAppName);
-
     //SNS共有
     UTexture* ImageSource = Cast<UTexture>(SharePhotoImage->GetBrush().GetResourceObject());
-    USocialShareBPLibrary::ShareImageFromTexture(ImageSource);
+    if (ImageSource)
+    {
+        Data = NewObject<USocialShareData>();
+        Data->Initialize(ImageSource);
+        Data->Delegate.AddDynamic(this, &UMainWidgetBase::ReceiveShareResult);
+
+        if (!USocialShareBPLibrary::Share(Data))
+        {
+            UE_LOG(LogTemp, Warning, TEXT("falied: ShareImage"));
+        }
+    }
+    
 }
 
 void UMainWidgetBase::ShareText()
 {
-    USocialShareBPLibrary::ShareText(
-        TEXT("画像を共有"),
-        TEXT("Favorite Space"),
-        TEXT("好きで、つながろう\nhttps://play.google.com/store/apps/details?id=com.sony.snspace\n#FavoriteSpace")
+    Data = NewObject<USocialShareData>();
+    Data->Initialize(
+        FString::Printf(TEXT("テキストを共有")), 
+        FString::Printf(TEXT("Favorite Space")), 
+        FString::Printf(TEXT("好きで、つながろう\nhttps://play.google.com/store/apps/details?id=com.sony.snspace\n#FavoriteSpace"))
     );
+    Data->Delegate.AddDynamic(this, &UMainWidgetBase::ReceiveShareResult);
+    if (!USocialShareBPLibrary::Share(Data))
+    {
+        UE_LOG(LogTemp,Warning, TEXT("falied: UMainWidgetBase::ShareTex"));
+    }
 }
 
 void UMainWidgetBase::ShareTextAndImage()
 {
-    //SNS共有時に選択したアプリ名を通知するイベントをBindする
-    OnReceiveShareSelectedAppDelegateHandle = USocialShareBPLibrary::OnReceiveShareSelectedAppDelegate.AddUObject(this, &UMainWidgetBase::PrintShareAppName);
-
+    
+    if (USocialShareBPLibrary::GetIsProcessing())
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Other SNS sharing is in progress.")));
+        return;
+    }
+ 
     UTexture* ImageSource = Cast<UTexture>(SharePhotoImage->GetBrush().GetResourceObject());
-    USocialShareBPLibrary::ShareImageAndTextFromTexture(
-        TEXT("画像を共有"),
-        TEXT("Favorite Space"),
-        TEXT("好きで、つながろう\nhttps://play.google.com/store/apps/details?id=com.sony.snspace\n#FavoriteSpace"),
-        ImageSource
-    );
+    if (ImageSource)
+    {
+        Data = NewObject<USocialShareData>();
+        Data->Initialize(
+            FString::Printf(TEXT("画像を共有")),
+            FString::Printf(TEXT("Favorite Space")),
+            FString::Printf(TEXT("好きで、つながろう\nhttps://play.google.com/store/apps/details?id=com.sony.snspace\n#FavoriteSpace")),
+            ImageSource
+        );
+        Data->Delegate.AddDynamic(this, &UMainWidgetBase::ReceiveShareResult);
+
+        if (!USocialShareBPLibrary::Share(Data))
+        {
+            UE_LOG(LogTemp, Warning, TEXT("falied: ShareImageAndText"));         
+        }
+    }
+  
 }
 
-void UMainWidgetBase::PrintShareAppName(FString AppName)
+
+void UMainWidgetBase::ReceiveShareResult(bool isCompleted, ESocialShareErrorCode ErrorCode, FString ErrorDetail, USocialShareData* ShareData)
 {
-    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("%s"), *AppName));
-    USocialShareBPLibrary::OnReceiveShareSelectedAppDelegate.Remove(OnReceiveShareSelectedAppDelegateHandle);
-    OnReceiveShareSelectedAppDelegateHandle.Reset();
+    if (ShareData && ShareData == Data)
+    {
+        if (isCompleted)
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Sharing is completed: %s"), *ShareData->ShareTarget));
+        }
+        else
+        {
+            GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Sharing is failed!: %i %s"), ErrorCode, *ErrorDetail));
+        }
+
+        if (ShareResultDelegateHandle.IsValid())
+        {
+           ShareData->Delegate.RemoveDynamic(this, &UMainWidgetBase::ReceiveShareResult);
+           ShareResultDelegateHandle.Reset();
+        }
+        Data = nullptr;
+    }
 }
 
 void UMainWidgetBase::OnPhotoShareCheckStateChanged(bool IsShared)

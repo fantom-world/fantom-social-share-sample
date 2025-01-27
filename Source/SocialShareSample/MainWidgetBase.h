@@ -8,6 +8,7 @@
 #include "Components/Image.h"
 #include "Components/CheckBox.h"
 #include "Components/EditableTextBox.h"
+#include "SocialShareBPLibrary.h"
 #include "MainWidgetBase.generated.h"
 
 /**
@@ -48,9 +49,6 @@ public:
 	//! テキストをSNSシェアするかどうかのCheckBox
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	TObjectPtr<UCheckBox> ShareTextCheckBox;
-
-	//! SNS共有時選択したアプリを選択した時にそのアプリ名を通知するDelegateHandle
-	FDelegateHandle OnReceiveShareSelectedAppDelegateHandle;
 
 protected:
 	/**
@@ -93,14 +91,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ShareTextAndImage();
 
-	/**
-	* @fn
-	* @brief SNS共有時に選択したアプリ名を表示する
-	* @param (AppName) アプリ名
-	* @return
-	*/
-	UFUNCTION(BlueprintCallable, Category = "Develop|SocialShare")
-	void PrintShareAppName(FString AppName);
+	UFUNCTION()
+	void ReceiveShareResult(bool isCompleted, ESocialShareErrorCode ErrorCode, FString ErrorDetail, USocialShareData* ShareData);
 
 private:
 	/**
@@ -129,4 +121,11 @@ private:
 	*/
 	UFUNCTION(BlueprintCallable)
 	void UpdateSocialShareType();
+
+	FDelegateHandle ShareResultDelegateHandle;
+
+protected:
+	//! Shareするデータ
+	UPROPERTY(BlueprintReadWrite)
+	USocialShareData* Data;
 };
