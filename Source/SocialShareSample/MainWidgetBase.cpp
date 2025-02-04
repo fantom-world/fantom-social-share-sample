@@ -36,6 +36,12 @@ void UMainWidgetBase::Share()
 
 void UMainWidgetBase::ShareImage()
 {
+    if (USocialShareBPLibrary::GetIsProcessing())
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Other SNS sharing is in progress.")));
+        return;
+    }
+
     //SNS共有
     UTexture* ImageSource = Cast<UTexture>(SharePhotoImage->GetBrush().GetResourceObject());
     if (ImageSource)
@@ -54,6 +60,12 @@ void UMainWidgetBase::ShareImage()
 
 void UMainWidgetBase::ShareText()
 {
+    if (USocialShareBPLibrary::GetIsProcessing())
+    {
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::Printf(TEXT("Other SNS sharing is in progress.")));
+        return;
+    }
+
     Data = NewObject<USocialShareData>();
     Data->Initialize(
         FString::Printf(TEXT("テキストを共有")), 

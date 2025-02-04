@@ -13,7 +13,7 @@
 
 /**
  * @enum ESocialShareType
- * SNS共有のタイプ
+ * SNS sharing type
  */
 UENUM(BlueprintType)
 enum class ESocialShareType : uint8
@@ -26,7 +26,7 @@ enum class ESocialShareType : uint8
 
 /**
  * @class UMainWidgetBase
- * @brief SNS共有機能テスト用のUIのベースクラス
+ * @brief Base class for UI for testing SNS sharing functionality
  */
 UCLASS(Blueprintable)
 class SOCIALSHARESAMPLE_API UMainWidgetBase : public UUserWidget
@@ -34,26 +34,26 @@ class SOCIALSHARESAMPLE_API UMainWidgetBase : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	//! SNSシェア用Button
+	//! SNS Share Execution Button
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	TObjectPtr<UButton> ShareButton;
 
-	//! SNSシェアする写真
+	//!  Photo to be shared on SNS
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	TObjectPtr<UImage> SharePhotoImage;
 	
-	//! 写真をSNSシェアするかどうかのCheckBox
+	//! CheckBox if you want to share the photo on SNS
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	TObjectPtr<UCheckBox> SharePhotoCheckBox;
 
-	//! テキストをSNSシェアするかどうかのCheckBox
+	//! CheckBox if you want to share the text on SNS
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	TObjectPtr<UCheckBox> ShareTextCheckBox;
 
 protected:
 	/**
 	* @fn
-	* @brief コンストラクタ
+	* @brief constructor
 	* @return
 	*/
 	virtual void NativeConstruct() override;
@@ -61,7 +61,7 @@ protected:
 public:
 	/**
 	* @fn
-	* @brief SNS共有
+	* @brief  SNS Sharing Execution
 	* @return
 	*/
 	UFUNCTION(BlueprintCallable)
@@ -69,7 +69,7 @@ public:
 	
 	/**
 	* @fn
-	* @brief Textureファイルを一時的に書き出してSNSで共有
+	* @brief Temporary export of Texture files to share on SNS 
 	* @return
 	*/
 	UFUNCTION(BlueprintCallable)
@@ -77,7 +77,7 @@ public:
 
 	/**
 	* @fn
-	* @brief テキストをSNSで共有
+	* @brief Share text on social networking sites
 	* @return
 	*/
 	UFUNCTION(BlueprintCallable)
@@ -85,19 +85,28 @@ public:
 
 	/**
 	* @fn
-	* @brief Textureファイルを一時的に書き出してテキストと共にSNSで共有
+	* @brief Temporarily export Texture files and share them with text on SNS
 	* @return
 	*/
 	UFUNCTION(BlueprintCallable)
 	void ShareTextAndImage();
 
+	/**
+	* @fn
+	* @brief  Receiving the results of SNS sharing
+	* @param (isCompleted) Success or failure
+	* @param (ErrorCode)  ErrorCode
+	* @param (ErrorDetail) Detailed error message
+	* @param (ShareData) Data for SNS sharing
+	* @return result
+	*/
 	UFUNCTION()
 	void ReceiveShareResult(bool isCompleted, ESocialShareErrorCode ErrorCode, FString ErrorDetail, USocialShareData* ShareData);
 
 private:
 	/**
 	* @fn
-	* @brief 写真をシェアするかどうかのチェックボックスの状態変更時のイベント
+	* @brief Event when changing the status of the checkbox whether to share the photo or not.
 	* @return
 	*/
 	UFUNCTION(BlueprintCallable)
@@ -105,27 +114,28 @@ private:
 
 	/**
 	* @fn
-	* @brief テキストをシェアするかどうかのチェックボックスの状態変更時のイベント
+	* @brief Event on change of status of checkbox whether to share text or not.
 	* @return
 	*/
 	UFUNCTION(BlueprintCallable)
 	void OnTextShareCheckStateChanged(bool IsShared);
 
-	//!  何をシェアするか
+	//!  What to Share
 	ESocialShareType SocialShareType;
 
 	/**
 	* @fn
-	* @brief 何をシェアするかの状態を更新する
+	* @brief Update the status of what you share
 	* @return
 	*/
 	UFUNCTION(BlueprintCallable)
 	void UpdateSocialShareType();
 
+	//! Delegate handle to receive the results of SNS sharing
 	FDelegateHandle ShareResultDelegateHandle;
 
 protected:
-	//! Shareするデータ
+	//! Data to Share
 	UPROPERTY(BlueprintReadWrite)
 	USocialShareData* Data;
 };
